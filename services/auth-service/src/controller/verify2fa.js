@@ -1,8 +1,9 @@
-import { prisma } from "../config/db";
+import { prisma } from "../config/db.js";
 import speakeasy from "speakeasy";
 
 export const verify2FA = async(req, res) => {
     const { userId, otp } = req.body;
+    console.log({ userId }, { otp });
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
 

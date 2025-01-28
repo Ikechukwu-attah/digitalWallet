@@ -14,6 +14,10 @@ app.get("/kudos", (req, res) => {
     res.send("GET request to '/kudos' works!");
 });
 
+app.get("/y", (req, res) => {
+    res.send("GET request to '/kudos' works!");
+});
+
 app.post("/try/hi", (req, res) => {
     console.log(req.body); // To confirm the request body is parsed correctly
     res.send("POST request to '/' works!");
