@@ -1,5 +1,8 @@
 import { prisma } from "../config/db.js";
+import speakeasy from "speakeasy";
 import bcrypt from "bcryptjs";
+import { generateToken, refreshToken } from "../services/generateToken.js";
+import { comparePassword, findUserByEmail } from "../services/userService.js";
 
 export const register = async(req, res) => {
     try {
@@ -23,11 +26,11 @@ export const register = async(req, res) => {
         // Create a new user
         const newUser = await prisma.user.create({
             data: {
-                username, // Ensure username is included if required
+                username,
                 firstname,
                 lastname,
                 email,
-                middlename: middlename || null, // Handle optional middlename
+                middlename: middlename || null,
                 password: hashedPassword,
             },
         });
@@ -41,6 +44,81 @@ export const register = async(req, res) => {
         res.status(500).json({
             status: "failed",
             message: "User creation failed",
+            error: error.message,
+        });
+    }
+};
+
+export const login = async(req, res) => {
+    const { email, password, otp } = req.body;
+
+    try {
+        if (!email || !password) {
+            return res
+                .status(401)
+                .json({ status: "Failed", message: "Email or password required" });
+        }
+
+        const checkEmail = await findUserByEmail(email);
+        if (!checkEmail)
+            return res
+                .status(401)
+                .json({ status: "Failed", message: "Incorrect email or password" });
+
+        const passwordMatch = await comparePassword(password, checkEmail.password);
+        if (!passwordMatch)
+            return res
+                .status(401)
+                .json({ status: "Failed", message: "Incorrect email or password" });
+
+        //if 2fa is enabled
+        if (checkEmail.is2FAEnabled) {
+            if (!otp) return res.status(400).json({ message: "OTP required" });
+
+            const isValidOtp = speakeasy.totp.verify({
+                secret: checkEmail.twoFASecret,
+                encoding: "base32",
+                token: otp,
+                window: 1,
+            });
+
+            if (!isValidOtp) return res.status(401).json({ message: "Invalid OTP" });
+        }
+
+        const token = generateToken({
+            id: checkEmail.id,
+            role: checkEmail.role,
+            firstname: checkEmail.firstname,
+        });
+        const refresh_token = refreshToken({
+            id: checkEmail.id,
+            role: checkEmail.role,
+            firstname: checkEmail.firstname,
+        });
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            samesite: "strict",
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
+        });
+
+        res.cookie("refresh_token", refresh_token, {
+            httpOnly: true,
+            samesite: "strict",
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
+        });
+
+        return res.status(200).json({
+            status: "success",
+            message: "User successfully logged in",
+            token: token,
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: "Failed",
+            message: "Not successful",
             error: error.message,
         });
     }

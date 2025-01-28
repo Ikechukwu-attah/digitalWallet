@@ -1,12 +1,16 @@
 import express from "express";
-import { validateAndSanitizeUser } from "../middleware/authUserInputValidation.js";
-import { register } from "../controller/user.js";
+import {
+    validateAndSanitizeUser,
+    validateLoginUserInput,
+} from "../middleware/authUserInputValidation.js";
+import { login, register } from "../controller/user.js";
+import { authMiddleware, authorizeRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.post("/register", validateAndSanitizeUser, register);
-router.post("/", (req, res) => {
-  res.send("Register endpoint hit!");
+router.post("/login", validateLoginUserInput, login);
+router.get("/check", authMiddleware, authorizeRole(["Admin"]), (req, res) => {
+    return res.send("checking cookies here");
 });
-
 export default router;

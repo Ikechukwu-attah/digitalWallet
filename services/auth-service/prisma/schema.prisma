@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
@@ -14,17 +15,19 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  username   String   @unique
-  firstname  String
-  lastname   String
-  middlename String?
-  email      String   @unique
-  password   String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  isActive   Boolean  @default(true)
-  role       Role     @default(USER)
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  firstname    String
+  lastname     String
+  middlename   String?
+  email        String   @unique
+  password     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  isActive     Boolean  @default(true)
+  role         Role     @default(USER)
+  is2FAEnabled Boolean  @default(false)
+  twoFASecret  String?
 
   @@map("User")
 }

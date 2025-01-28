@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const generateToken = ({ id, role, firstname }) => {
+    console.log(id, firstname, role);
     const token = jwt.sign({ id: id, role: role, firstname: firstname },
         process.env.TOKEN_SECRET, { expiresIn: "1h" }
     );
@@ -12,6 +13,7 @@ export const generateToken = ({ id, role, firstname }) => {
 };
 
 export const refreshToken = ({ id, role, firstname }) => {
+    console.log(id, firstname, role);
     const tokenRefresh = jwt.sign({ id: id, role: role, firstname: firstname },
         process.env.REFRESH_TOKEN, {
             expiresIn: "7d",
