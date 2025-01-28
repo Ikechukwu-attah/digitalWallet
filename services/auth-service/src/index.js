@@ -1,17 +1,25 @@
 import express from "express";
+import authRoutes from "./routes/auth.routes.js";
 const app = express();
-import dotenv from "dotenv";
 
-dotenv.config();
+app.use(express.json());
 
-// Basic route for testing
-app.get("/", (req, res) => {
-  res.send("Auth Service is up and running!");
+app.use((req, res, next) => {
+  console.log(`Request method: ${req.method}, URL: ${req.url}`);
+  next();
 });
 
-console.log("testing", process.env.DB_HOST, process.env.DB_NAME);
-// Start the server
-const PORT = process.env.PORT || 4000;
+app.get("/", (req, res) => {
+  res.send("GET request to '/' works!");
+});
+
+app.post("/try/hi", (req, res) => {
+  console.log(req.body); // To confirm the request body is parsed correctly
+  res.send("POST request to '/' works!");
+});
+
+app.use("/user", authRoutes);
+const PORT = 4000;
 app.listen(PORT, () => {
-  console.log(`Auth Service is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

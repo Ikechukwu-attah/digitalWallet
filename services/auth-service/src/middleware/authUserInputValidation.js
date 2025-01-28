@@ -1,49 +1,45 @@
-import Joi from "joi";
-import { body } from "express-validator";
-//Define schema
+import { body, validationResult } from "express-validator";
 
-const userValidationSchema = Joi.object({
-  email: Joi.string().email().required(),
-  firstname: Joi.string()
-    .min(2)
-    .max(50)
-    .regex(/^[a-zA-Z]+$/)
-    .required(),
-  lastname: Joi.string()
-    .min(2)
-    .max(50)
-    .regex(/^[a-zA-Z]+$/)
-    .required(),
+export const validateAndSanitizeUser = [
+  // Validation and Sanitization
+  body("email").isEmail().withMessage("Invalid email format").normalizeEmail(),
+  body("firstname")
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Firstname must be between 2 and 50 characters")
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("Firstname must contain only letters")
+    .trim()
+    .escape(),
+  body("lastname")
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Lastname must be between 2 and 50 characters")
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("Lastname must contain only letters")
+    .trim()
+    .escape(),
+  body("middlename")
+    .optional()
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Middlename must be between 2 and 50 characters")
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("Middlename must contain only letters")
+    .trim()
+    .escape(),
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters")
+    .matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/)
+    .withMessage(
+      "Password must contain at least one letter, one number, and one special character"
+    )
+    .trim(),
 
-  middlename: Joi.string()
-    .min(2)
-    .max(50)
-    .regex(/^[a-zA-Z]+$/)
-    .optional(),
-
-  password: Joi.string()
-    .min(8)
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/)
-    .required(),
-});
-
-// Validate incoming data
-const validateUserInput = (req, res, next) => {
-  const { error } = userValidationSchema.validate(req.body);
-  if (error) {
-    return res
-      .status(400)
-      .json({ status: "failed", message: error.details[0].message });
-  }
-  next();
-};
-
-export default validateUserInput;
-
-export const inputSanitize = () => {
-  body("email").normalizeEmail();
-  body("firstname").trim().escape();
-  body("lastname").trim().escape();
-  body("middlename").trim().escape().optional();
-  body("password").trim();
-};
+  // Error handling middleware
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ status: "failed", errors: errors.array() });
+    }
+    next();
+  },
+];

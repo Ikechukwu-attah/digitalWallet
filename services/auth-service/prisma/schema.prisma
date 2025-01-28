@@ -25,6 +25,8 @@ model User {
   updatedAt  DateTime @updatedAt
   isActive   Boolean  @default(true)
   role       Role     @default(USER)
+
+  @@map("User")
 }
 
 enum Role {

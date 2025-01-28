@@ -1,21 +1,24 @@
-# Use the Node.js base image
+# Base image
 FROM node:18-alpine
 
-
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json first to install dependencies
-COPY package*.json ./
-
-# Install dependencies
+# Copy package.json and install dependencies
+COPY package.json package-lock.json ./
 RUN npm install
 
-# Copy the rest of the application, including the `src` folder
+# Copy application code
 COPY . .
 
-# Expose the port for the application
+# Install nodemon globally for watching
+RUN npm install -g nodemon
+
+# Expose the application port
 EXPOSE 4000
 
-# Start the application
-CMD ["node", "src/index.js"]
+# Default command for development
+CMD ["nodemon", "src/index.js"]
+
+# Add this to the Dockerfile
+RUN npm ci

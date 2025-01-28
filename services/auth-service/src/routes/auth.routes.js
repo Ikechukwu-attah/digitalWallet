@@ -1,9 +1,12 @@
 import express from "express";
-import validateUserInput, {
-  inputSanitize,
-} from "../middleware/authUserInputValidation.js";
+import { validateAndSanitizeUser } from "../middleware/authUserInputValidation.js";
 import { register } from "../controller/user.js";
 
-const route = express.Router();
+const router = express.Router();
 
-route.post("/register", inputSanitize, validateUserInput, register);
+router.post("/register", validateAndSanitizeUser, register);
+router.post("/", (req, res) => {
+  res.send("Register endpoint hit!");
+});
+
+export default router;
