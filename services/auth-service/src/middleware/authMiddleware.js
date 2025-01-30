@@ -15,6 +15,9 @@ export const authMiddleware = async(req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
+        if (error.name === "TokenExpiredError") {
+            return res.status(401).json({ message: "Access toke expired" });
+        }
         res.status(401).json({
             status: "Failed",
             error: error.message,

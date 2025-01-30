@@ -101,6 +101,7 @@ export const login = async(req, res) => {
             samesite: "strict",
             secure: process.env.NODE_ENV === "production",
             path: "/",
+            maxAge: 3600000,
         });
 
         res.cookie("refresh_token", refresh_token, {
@@ -108,6 +109,7 @@ export const login = async(req, res) => {
             samesite: "strict",
             secure: process.env.NODE_ENV === "production",
             path: "/",
+            maxAge: 3600000,
         });
 
         return res.status(200).json({
@@ -122,4 +124,15 @@ export const login = async(req, res) => {
             error: error.message,
         });
     }
+};
+
+export const logout = (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV == "production",
+        samesite: "Strict",
+    });
+    res.clearCookie("refresh_token");
+
+    res.json({ message: "Logged out successfully" });
 };

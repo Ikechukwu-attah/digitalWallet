@@ -4,13 +4,13 @@ import { prisma } from "../config/db.js";
 
 export const enable2fa = async(req, res) => {
     try {
-        const { userId } = req.body;
+        const { userId, email } = req.body;
         console.log("userID", userId);
 
         // Generate a 2FA secret
         const secret = speakeasy.generateSecret({
             length: 20,
-            name: `DigitalWallet (${email})`,
+            name: `DigitalWallet ${email}`,
             issuer: "DigitalWallet",
         });
 
