@@ -4,6 +4,7 @@ import connectDB from "./config/db.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import profileRoute from "./routes/user.route.js";
+import { connectRabbitMQ } from "../rabbitmq/connection.js";
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +18,8 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 
+//RabbitMQ
+connectRabbitMQ();
 // Test Route
 app.get("/", (req, res) => {
   res.send("✅ Server is running!");
