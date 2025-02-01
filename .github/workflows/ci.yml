@@ -20,16 +20,20 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          working-directory: services/userprofile-service
 
       - name: Install Dependencies
-        run: npm install || exit 1 # Stop if npm install fails
+        run: npm install
+        working-directory: services/userprofile-service
 
       - name: Run Linter
-        run: npm run lint || exit 1 # Stop if linting fails
+        run: npm run lint
+        working-directory: services/userprofile-service
 
       - name: Run Tests
-        run: npm test || exit 1 # Stop if tests fail
+        run: npm test
+        working-directory: services/userprofile-service
 
       - name: Build Docker Image
-        run: |
-          docker build -t userprofile-service . || exit 1
+        run: docker build -t userprofile-service .
+        working-directory: services/userprofile-service
