@@ -22,14 +22,14 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        run: npm install
+        run: npm install || exit 1 # Stop if npm install fails
 
       - name: Run Linter
-        run: npm run lint
+        run: npm run lint || exit 1 # Stop if linting fails
 
       - name: Run Tests
-        run: npm test
+        run: npm test || exit 1 # Stop if tests fail
 
       - name: Build Docker Image
-        run: docker build -t userprofile-service .
-
+        run: |
+          docker build -t userprofile-service . || exit 1
