@@ -1,8 +1,10 @@
 import express from "express";
-import { profile } from "../controllers/user.controller.js";
+import { profile, updateUserProfile } from "../controllers/user.controller.js";
+import authenticateUser from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/user-profile", profile);
+router.put("/update", authenticateUser, updateUserProfile);
 
 export default router;
