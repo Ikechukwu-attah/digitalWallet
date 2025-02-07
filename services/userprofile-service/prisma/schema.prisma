@@ -9,14 +9,20 @@ datasource db {
 }
 
 model UserProfile {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  firstname   String
-  lastname    String
-  email       String   @unique
-  phone       String?
-  address     Json?
-  social      Json?
-  preferences Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  firstname      String
+  lastname       String
+  middlename     String?
+  username       String    @unique
+  userId         String    @unique // Store original User ID from auth-service
+  email          String    @unique
+  phone          String?
+  bio            String?
+  dateOfBirth    DateTime?
+  profilePicture String?
+  address        Json?
+  social         Json?
+  preferences    Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }

@@ -47,6 +47,7 @@ export const register = async (req, res) => {
       lastname,
       email,
       middlename,
+      userId: newUser.id,
     });
     channel.sendToQueue(queue, Buffer.from(message));
     console.log(`Sent user registration event to RabbitMQ: ${message}`);
