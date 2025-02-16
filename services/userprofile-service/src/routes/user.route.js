@@ -5,6 +5,6 @@ import authenticateUser from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get("/user-profile", profile);
-router.put("/update", authenticateUser, updateUserProfile);
+router.put("/update/:userId", authenticateUser, updateUserProfile);
 
 export default router;

@@ -1,69 +1,58 @@
+import { publishToQueue } from "../../rabbitmq/publisher.js";
 import { prisma } from "../config/db.js";
 import { ObjectId } from "mongodb";
 
-export const profile = async (req, res) => {
-  return res.status(200).json({ message: "Testing them now" });
+export const profile = async(req, res) => {
+    return res.status(200).json({ message: "Testing them now" });
 };
 
-export const updateUserProfile = async (req, res) => {
-  try {
-    console.log("🟡 Received Update Request:", req.body);
+export const updateUserProfile = async(req, res) => {
+    try {
+        const { userId } = req.params;
+        const updateData = req.body;
+        console.log({ userId });
 
-    let userId = req.user.id; // Extract user ID from token
-    console.log("🔍 Searching for user in database with ID:", userId);
+        const { firstname, lastname, middlename, ...otherFields } = updateData;
 
-    if (!userId) {
-      console.log("❌ No User ID found in request.");
-      return res.status(400).json({ error: "User ID required" });
+        const updatedProfile = await prisma.userProfile.update({
+            where: { userId: userId },
+            data: { firstname, lastname, middlename, ...otherFields },
+        });
+
+        //if firstname, lastname or middlename were updated, notify auth-service
+        if (firstname || lastname || middlename) {
+            const eventPayload = {
+                userId,
+                ...(firstname && { firstname }),
+                ...(lastname && { lastname }),
+                ...(middlename && { middlename }),
+            };
+
+            await publishToQueue("UserProfileUpdated", eventPayload); // Send event to RabbitMQ
+        }
+        return res.status(200).json({
+            message: "User profile updated successfully",
+            updatedProfile,
+        });
+    } catch (error) {
+        console.error("Error updating user profile", error);
+        return res.status(500).json({ error: "Internal server error" });
     }
+};
 
-    // ✅ Convert numeric ID to string to match MongoDB _id format
-    let userProfileId = String(userId);
+export const deleteUser = async(req, res) => {
+    const id = req.params;
 
-    // ✅ Check if user exists in MongoDB
-    let existingProfile = await prisma.userProfile.findUnique({
-      where: { id: userProfileId },
-    });
+    try {
+        if (!id) return res.status(401).json({ message: "Id is required" });
 
-    console.log("🔍 Existing Profile:", existingProfile);
+        const user = await prisma.userProfile.findUnique({ where: { id: id } });
 
-    if (!existingProfile) {
-      console.log("⚠️ No user found. Creating new profile...");
+        if (!user) return res.status(400).json({ message: "User not found" });
 
-      // ✅ Create a new profile with default values
-      existingProfile = await prisma.userProfile.create({
-        data: {
-          id: userProfileId, // Store numeric ID as string
-          email: req.body.email,
-          username: req.body.username || "",
-          firstname: req.body.firstname || "",
-          lastname: req.body.lastname || "",
-          phone: req.body.phone || "",
-          address: req.body.address || "",
-          dateOfBirth: req.body.dateOfBirth || null,
-          profilePicture: req.body.profilePicture || "",
-          bio: req.body.bio || "",
-        },
-      });
-
-      console.log("✅ New Profile Created:", existingProfile);
+        await prisma.userProfile.delete({ where: { id: id } });
+        return res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        console.log(error);
     }
-
-    // ✅ Update user profile with new data
-    const updatedProfile = await prisma.userProfile.update({
-      where: { id: userProfileId },
-      data: req.body,
-    });
-
-    console.log("✅ Profile Updated Successfully:", updatedProfile);
-
-    res.status(200).json({
-      status: "success",
-      message: "Profile updated successfully",
-      data: updatedProfile,
-    });
-  } catch (error) {
-    console.error("❌ Error updating profile:", error.message);
-    res.status(500).json({ error: "Failed to update profile" });
-  }
 };

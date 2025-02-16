@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import passport from "passport";
 import "./config/passport.js";
 import { connectRabbitMQ } from "../rabbitMQ/connection.js";
+import { consumeUserProfileUpdated } from "../rabbitmq/consumer.js";
 
 const app = express();
 dotenv.config();
@@ -13,21 +14,24 @@ dotenv.config();
 app.use(express.json());
 app.use(cookieParser());
 app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: process.env.NODE_ENV === "production" },
-  })
+    session({
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true,
+        cookie: { secure: process.env.NODE_ENV === "production" },
+    })
 );
 app.use(passport.initialize());
 app.use(passport.session());
 
-connectRabbitMQ();
+(async() => {
+    await connectRabbitMQ();
+    await consumeUserProfileUpdated();
+})();
 
 app.use("/user", authRoutes);
 
 const PORT = 4000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
