@@ -5,7 +5,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import profileRoute from "./routes/user.route.js";
 import { connectRabbitMQ } from "../rabbitmq/connection.js";
-import { consumeUserRegistered } from "../rabbitmq/consumer.js";
+import { consumeEvent } from "../rabbitmq/consumer.js";
 
 // Load environment variables
 dotenv.config();
@@ -23,7 +23,7 @@ app.use(express.json());
 
 const startApp = async () => {
   await connectRabbitMQ();
-  consumeUserRegistered();
+  consumeEvent();
 };
 
 startApp();

@@ -3,7 +3,8 @@ import speakeasy from "speakeasy";
 import bcrypt from "bcryptjs";
 import { generateToken, refreshToken } from "../services/generateToken.js";
 import { comparePassword, findUserByEmail } from "../services/userService.js";
-import { getRabbitChannel } from "../../rabbitMQ/connection.js";
+
+import { publishQueue } from "../../rabbitmq/publisher.js";
 
 export const register = async (req, res) => {
   try {
@@ -36,10 +37,6 @@ export const register = async (req, res) => {
       },
     });
 
-    //Publish user registration event to RabbitMQ
-    const channel = getRabbitChannel();
-    const queue = "user_registered"; //queue name
-    await channel.assertQueue(queue, { durable: true });
     //message to be sent to the userprofile service
     const message = JSON.stringify({
       username,
@@ -49,7 +46,8 @@ export const register = async (req, res) => {
       middlename,
       userId: newUser.id,
     });
-    channel.sendToQueue(queue, Buffer.from(message));
+
+    publishQueue("user_registered", message);
     console.log(`Sent user registration event to RabbitMQ: ${message}`);
 
     return res.status(201).json({

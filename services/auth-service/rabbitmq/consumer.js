@@ -1,30 +1,10 @@
-import { getRabbitChannel } from "./connection.js";
-
-const handleUserProfileUpdated = async (message) => {
-  try {
-    const data = JSON.parse(message.content.toString());
-    const { userId, firstname, lastname, middlename } = data;
-
-    //update only the auth service
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(firstname && { firstname }),
-        ...(lastname && { lastname }),
-        ...(middlename && { middlename }),
-      },
-    });
-    console.log(
-      `User profile updated in the auth-service for userId:${userId}`
-    );
-  } catch (error) {
-    console.error("Error updating user in auth-service", error);
-  }
-};
+import { getRabbitChannel, waitForRabbitMQ } from "./connection.js";
+import { handleUserProfileUpdated } from "./handlers/handleUserProfileUpdated.js";
 
 export const consumeUserProfileUpdated = async () => {
   try {
-    const channel = getRabbitChannel();
+    const channel = await waitForRabbitMQ();
+
     await channel.assertQueue("UserProfileUpdated", { durable: true });
     channel.consume("UserProfileUpdated", async (message) => {
       if (message !== null) {

@@ -19,8 +19,22 @@ export const connectRabbitMQ = async () => {
 
 export const getRabbitChannel = () => {
   if (!channel) {
-    throw new Error("RabbitMQ channel is not initialized ");
+    console.warn("⚠️ RabbitMQ channel not initialized. Retrying...");
+    return null;
   }
 
+  return channel;
+};
+
+export const waitForRabbitMQ = async () => {
+  let channel;
+  while (!channel) {
+    try {
+      channel = getRabbitChannel();
+    } catch (error) {
+      console.warn("⏳ RabbitMQ not ready. Retrying...");
+      await new Promise((resolve) => setImmediate(resolve)); // Allows event loop to continue
+    }
+  }
   return channel;
 };
