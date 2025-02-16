@@ -69,6 +69,20 @@ export const getSingleUser = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
     return res.status(200).json({ status: "successful", data: user });
   } catch (error) {
-    return res.status(400).json({ message: error });
+    return res.status(500).json({ message: error });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const user = await prisma.userProfile.findMany();
+    if (!user) return res.status(404).json({ message: "Users not found" });
+    res
+      .status(200)
+      .json({ message: "User successfully extracted", data: user });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "user extraction not successful", error: error });
   }
 };
