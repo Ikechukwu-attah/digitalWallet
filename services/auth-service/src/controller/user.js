@@ -38,14 +38,14 @@ export const register = async (req, res) => {
     });
 
     //message to be sent to the userprofile service
-    const message = JSON.stringify({
+    const message = {
       username,
       firstname,
       lastname,
       email,
       middlename,
       userId: newUser.id,
-    });
+    };
 
     publishQueue("user_registered", message);
     console.log(`Sent user registration event to RabbitMQ: ${message}`);

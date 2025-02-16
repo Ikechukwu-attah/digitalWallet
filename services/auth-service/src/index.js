@@ -5,7 +5,7 @@ import session from "express-session";
 import authRoutes from "./routes/auth.routes.js";
 import passport from "passport";
 import "./config/passport.js";
-import { consumeUserProfileUpdated } from "../rabbitmq/consumer.js";
+import { consumeEvent } from "../rabbitmq/consumer.js";
 import { connectRabbitMQ } from "../rabbitmq/connection.js";
 
 const app = express();
@@ -26,7 +26,7 @@ app.use(passport.session());
 
 (async () => {
   await connectRabbitMQ();
-  await consumeUserProfileUpdated();
+  await consumeEvent();
 })();
 
 app.use("/user", authRoutes);

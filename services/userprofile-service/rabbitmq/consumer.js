@@ -1,10 +1,9 @@
-import { prisma } from "../src/config/db.js";
-import { getRabbitChannel } from "./connection.js";
+import { waitForRabbitMQ } from "./connection.js";
 import { handleUserRegistered } from "./handlers/handleUserRegistered.js";
 
 export const consumeEvent = async () => {
   try {
-    const channel = getRabbitChannel();
+    const channel = await waitForRabbitMQ();
     // Consume registered event
     await channel.assertQueue("user_registered", { durable: true });
 

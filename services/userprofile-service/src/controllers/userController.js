@@ -51,7 +51,7 @@ export const deleteUser = async (req, res) => {
     if (!user) return res.status(400).json({ message: "User not found" });
 
     await prisma.userProfile.delete({ where: { userId } });
-    await publishToQueue("userDeleted", userId);
+    await publishToQueue("userDeleted", { userId });
     return res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     console.log(error);

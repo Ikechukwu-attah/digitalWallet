@@ -24,3 +24,16 @@ export const getRabbitChannel = () => {
 
   return channel;
 };
+
+export const waitForRabbitMQ = async () => {
+  let channel;
+  while (!channel) {
+    try {
+      channel = getRabbitChannel();
+    } catch (error) {
+      console.warn("⏳ RabbitMQ not ready. Retrying...");
+      await new Promise((resolve) => setImmediate(resolve)); // Allows event loop to continue
+    }
+  }
+  return channel;
+};
