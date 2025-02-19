@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   api-gateway:
     image: nginx:latest
@@ -9,51 +11,82 @@ services:
     depends_on:
       - auth-service
       - userprofile-service
+      - payments-service
+    networks:
+      - digitalwallet_network
 
   auth-service:
     build:
       context: ./services/auth-service
-    command: npm run dev # Use nodemon for hot reload
+    command: npm run dev
     ports:
       - "4000:4000"
-    environment:
-      - DATABASE_URL=postgresql://auth_user:auth_password@postgres:5432/auth_db
-      - RABBITMQ_URL=amqp://rabbitmq:5672 # RabbitMQ Connection
+    env_file:
+      - ./services/auth-service/.env
     volumes:
       - ./services/auth-service:/usr/src/app
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - digitalwallet_network
 
   userprofile-service:
     build:
       context: ./services/userprofile-service
-    command: npm run dev # Use nodemon for hot reload
+    command: npm run dev
     ports:
       - "5001:5001"
-    environment:
-      - DATABASE_URL=${DATABASE_URL} #
-      - RABBITMQ_URL=amqp://rabbitmq:5672 # RabbitMQ Connection
-      - PORT=5001
+    env_file:
+      - ./services/userprofile-service/.env
     volumes:
       - ./services/userprofile-service:/usr/src/app
     depends_on:
-      - mongo
-      - rabbitmq
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - digitalwallet_network
+
+  payments-service:
+    build:
+      context: ./services/payments-service
+    command: sh -c "npx prisma migrate deploy && npm run dev"
+    ports:
+      - "5002:5002"
     env_file:
-      - .env # Ensure environment variables are loaded
-    restart: always
+      - ./services/payments-service/.env
+    volumes:
+      - ./services/payments-service:/usr/src/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - digitalwallet_network
 
   postgres:
     image: postgres:13
+    container_name: digitalwallet-postgres
     environment:
-      POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_password
-      POSTGRES_DB: auth_db
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - digitalwallet_network
 
   mongo:
     image: mongo
@@ -68,14 +101,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - digitalwallet_network
 
   rabbitmq:
     image: "rabbitmq:3-management"
     container_name: rabbitmq
     restart: always
     ports:
-      - "5672:5672" # RabbitMQ communication
-      - "15672:15672" # RabbitMQ management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -86,6 +121,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - digitalwallet_network
+
+networks:
+  digitalwallet_network:
+    driver: bridge
 
 volumes:
   pgdata:
